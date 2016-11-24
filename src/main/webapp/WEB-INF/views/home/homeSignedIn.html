@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title >Тестовое задание,Водолазский К.Г.</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link href="../../../resources/css/bootstrap.min.css" rel="stylesheet" media="screen" th:href="@{/resources/css/bootstrap.min.css}"/>
+        <link href="../../../resources/css/core.css" rel="stylesheet" media="screen" th:href="@{/resources/css/core.css}" />
+        <script src="http://code.jquery.com/jquery-latest.js"></script>
+        <script src="../../../resources/js/bootstrap.min.js" th:src="@{/resources/js/bootstrap.min.js}"></script>
+        <script th:src="@{/resources/js/jquery-ui.js}"></script>
+        <link rel="stylesheet" th:href="@{/resources/css/jquery-ui.css}"/>
+        <script th:src="@{/resources/js/jquery.toaster.js}"></script>
+        <style>
+            hr {
+                border: none; 
+                color: red; 
+                background-color: red; 
+                height: 2px;
+            }
+
+
+            .invalid {
+                box-shadow: 0 0 5px 1px red;
+            }
+
+            /*            input:focus:invalid {
+                            outline: none;
+                        }*/
+
+        </style>
+    </head>
+    <body>
+        <div th:replace="fragments/header :: header">&nbsp;</div>
+        <div class="container">
+
+
+            <br/>
+            <h5>
+                не уверен, что правильно понял данное задание...<br/>
+                к примеру, у на есть диапазон 2.2.2.2 и 2.2.4.4<br/>
+                мы должны вернуть в этом случае только 2.2.3.3,<br/>
+                ограничивая себя верхним и нижним значением для каждого числа<br/>
+                или же мы должны возвратить все варианты, не совпадающие с пределами,<br/>
+                но с ограничением каждого числа по верхней и нижний границе на данной позиции?<br/>
+                <br/>
+                я использовал второй вариант...<br/>
+                предел 2.2.2.2 и 2.2.4.4 возвращает<br/>
+                "2.2.2.3", "2.2.2.4", "2.2.3.2", "2.2.3.3", "2.2.3.4", "2.2.4.2", "2.2.4.3"
+
+
+            </h5>
+            <div class="form-inline">
+                <input class="form-control" id="from" style="width:30%" />
+                <input class="form-control" id="to" style="width:30%"/>
+
+            </div>
+            <button id="getByRange" onclick="showIpsByRange()" class="btn" style="width:15%">Найти по диапазону</button>
+
+            <div class="" style="height:250px; background-color: #f8f8f8; border:1px solid grey; overflow-y:scroll; width: 60%">
+
+                <table class="table " style="background-color: #d9edf7; "  >
+                    <thead>
+                        <tr style="background-color: #005baa">
+                            <td align="center" style="width: 70%; color: #f8f8f8">
+                                result 
+                            </td>
+
+                        </tr>
+                    </thead>
+                    <tbody id="tableContent" style=" background-color: #f8f8f8;height:250px;   ">
+
+                    </tbody>
+                </table>
+            </div>
+
+            <hr color="red" width="100%"/>
+
+            <div class="form-inline">
+                <input class="form-control" id="content_phoneBook_select" style="width:85%"/>
+                <button id="showall" class="btn" style="width:15%">Показать все имена</button>
+                <button id="checkPhones" onclick="getAllPhonesByName()" class="btn" style="width:18%">Найти номера абонента</button>
+            </div>
+
+            <div class="" style="height:250px; background-color: #f8f8f8; border:1px solid grey; overflow-y:scroll; width: 60%">
+
+                <table class="table " style="background-color: #d9edf7; "  >
+                    <thead>
+                        <tr style="background-color: #005baa">
+                            <td align="center" style="width: 70%; color: #f8f8f8">
+                                result 
+                            </td>
+
+                        </tr>
+                    </thead>
+                    <tbody id="tableContentPhones" style=" background-color: #f8f8f8;height:250px;   ">
+
+                    </tbody>
+                </table>
+            </div>
+
+
+
+
+
+
+        </div>
+        <script th:inline="javascript">
+            // <![CDATA[
+
+
+
+            function ValidateIPaddress(ipaddress, input)
+            {
+                if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress))
+                {
+                    $("#" + input + "").removeClass('invalid');
+                    return (true);
+                } else {
+                    $("#" + input + "").addClass('invalid');
+                    $.toaster({priority: 'warning', title: 'Предупреждение', message: 'Не валидный ip-адрес'});
+                    return (false);
+                }
+            }
+
+
+            
+
+
+            function showIpsByRange() {
+                $("#tableContent tr").remove();
+                if (ValidateIPaddress($("#from").val().trim(), "from") & ValidateIPaddress($("#to").val().trim(), "to")) {
+
+                    $.ajax({
+                        url: "http://localhost:8084/test2/ip/showIpsByRange",
+                        type: "GET",
+                        data: {
+                            from: $("#from").val().trim(),
+                            to: $("#to").val().trim()
+                        },
+                        success: function (data) {
+                            if (data.length==0) {
+                                $.toaster({priority: 'warning', title: 'Предупреждение', message: 'Отсутствуют ip-адреса в данном диапазоне'});
+                                return (false);
+                            }
+                            var tbody = $("#tableContent");
+                            for (var i = 0; i < data.length; i++) {
+                                var tr = $("<tr></tr>");
+                                tr.append("<td>" + data[i] + "</td>")
+                                tbody.append(tr);
+                            }
+
+                        }
+                    });
+                }
+            }
+
+
+            $("#content_phoneBook_select").autocomplete({minLength: 0,
+                source: function (request, response) {
+                    $.ajax({
+                        url: 'http://localhost:8084/test2/phoneBook/showNames',
+                        type: "GET",
+                        data: {
+                            subStr: $("#content_phoneBook_select").val().trim()
+                        },
+                        success: function (data) {
+                            response($.map(data, function (item) {
+                                return {
+                                    label: item,
+                                    value: item,
+                                    fullName: item
+                                };
+                            }));
+                        }
+                    });
+                },
+                select: function (event, ui) {
+                    $("#content_phoneBook_select").attr("fullName", ui.item);
+                }
+            });
+            $('#showall').on('click', function () {
+                $('#content_phoneBook_select').val("");
+                $('#content_phoneBook_select').autocomplete('search', '');
+            });
+
+            function getAllPhonesByName() {
+                $("#tableContentPhones tr").remove();
+                if($('#content_phoneBook_select').val().trim().length==0){
+                    $.toaster({priority: 'warning', title: 'Предупреждение', message: 'Введите имя абонента'});
+                    return false;
+                }
+                $.ajax({
+                    url: "http://localhost:8084/test2/phoneBook/getAllPhonesByName",
+                    type: "GET",
+                    data: {
+                        nameStr: $('#content_phoneBook_select').val().trim()
+                    },
+                    success: function (data) {
+                        if (!data.findName) {
+                            $.toaster({priority: 'danger', title: 'Ошибка', message: 'Данного контакта не существует'});
+                            return (false);
+                        }
+                        if (data.phones.length == 0) {
+                            $.toaster({priority: 'danger', title: 'Ошибка', message: 'По данному имени не найдено номеров'});
+                            return (false);
+                        }
+
+                        var tbody = $("#tableContentPhones");
+                        for (var i = 0; i < data.phones.length; i++) {
+                            var tr = $("<tr></tr>");
+                            tr.append("<td>" + data.phones[i] + "</td>")
+                            tbody.append(tr);
+                        }
+                    }
+                });
+            }
+            
+            $(document).keydown(function (e) {
+                if (e.keyCode === 13 ) {
+                    if(document.activeElement.getAttribute('id')=='from' || document.activeElement.getAttribute('id')=='to'){
+                        showIpsByRange();
+                    } else if(document.activeElement.getAttribute('id')=='content_phoneBook_select'){
+                        getAllPhonesByName();
+                    }
+                }
+            });
+
+
+            // ]]>
+        </script>
+    </body>
+</html>
